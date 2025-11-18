@@ -25,7 +25,7 @@ bool GwSettings::init()
   if (!prefs.isKey("name"))
   { // default name
     nameLen = 7;
-    name = "esp32gw";
+    name = (char*)"esp32gw";
     prefs.putBytes("name", name, nameLen);
   }
   else
@@ -39,7 +39,7 @@ bool GwSettings::init()
   if (!prefs.isKey("password"))
   { // default admin password
     passwordLen = 5;
-    password = "admin";
+    password = (char*)"admin";
     prefs.putBytes("password", password, passwordLen);
   }
   else

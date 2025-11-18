@@ -8,19 +8,19 @@
 
 Security::Security(const char *aesKey)
 {
-  esp_aes_init(&aesContext);
+  mbedtls_aes_init(&aesContext);
   setKey(aesKey);
 }
 
 Security::Security()
 {
   keyLength = 0;
-  esp_aes_init(&aesContext);
+  mbedtls_aes_init(&aesContext);
 }
 
 Security::~Security()
 {
-  esp_aes_free(&aesContext);
+  mbedtls_aes_free(&aesContext);
 }
 
 void Security::generateKey(char *newKey) {
@@ -36,7 +36,7 @@ void Security::setKey(const char *aesKey)
   fromHex(aesKey, keyLength * 2, localKey);
   ESP_LOG_BUFFER_HEX("KEY      ", localKey, keyLength);
   memcpy(key, localKey, BLOCK_SIZE);
-  esp_aes_setkey(&aesContext, key, keyLength * 8);
+  mbedtls_aes_setkey_enc(&aesContext, key, keyLength * 8);
 }
 
 void Security::getKey(uint8_t *aesKey) {
@@ -72,7 +72,7 @@ size_t Security::encrypt(const uint8_t IV[BLOCK_SIZE], const uint8_t *data, size
   uint8_t padedData[padedDataLength];
   memset(padedData, 0, padedDataLength);
   memcpy(padedData, data, dataLength);
-  int result = esp_aes_crypt_cbc(&aesContext, ESP_AES_ENCRYPT, padedDataLength, localIV, padedData, encrypted);
+  int result = mbedtls_aes_crypt_cbc(&aesContext, MBEDTLS_AES_ENCRYPT, padedDataLength, localIV, padedData, encrypted);
   // check result
   if (result != 0)
   {
@@ -86,7 +86,7 @@ size_t Security::decrypt(const uint8_t IV[BLOCK_SIZE], const uint8_t *data, size
   uint8_t localIV[BLOCK_SIZE];
   memcpy(localIV, IV, BLOCK_SIZE);
 
-  int result = esp_aes_crypt_cbc(&aesContext, ESP_AES_DECRYPT, dataLength, localIV, data, decrypted);
+  int result = mbedtls_aes_crypt_cbc(&aesContext, MBEDTLS_AES_DECRYPT, dataLength, localIV, data, decrypted);
   if (result != 0)
   {
     return 0;

@@ -8,13 +8,13 @@ BLEDeviceFound BLEApi::_cbOnDeviceFound = nullptr;
 BLEDeviceEvent BLEApi::_cbOnDeviceConnected = nullptr;
 BLEDeviceEvent BLEApi::_cbOnDeviceDisconnected = nullptr;
 BLECharacteristicNotification BLEApi::_cbOnCharacteristicNotification = nullptr;
-BLEAdvertisedDeviceCallbacks *BLEApi::_advertisedDeviceCallback = nullptr;
-BLEClientCallbacks *BLEApi::_clientCallback = nullptr;
+NimBLEScanCallbacks *BLEApi::_advertisedDeviceCallback = nullptr;
+NimBLEClientCallbacks *BLEApi::_clientCallback = nullptr;
 std::map<BLEPeripheralID, uint8_t> BLEApi::addressTypes;
 BLEConnection BLEApi::connections[MAX_CLIENT_CONNECTIONS];
 uint8_t BLEApi::activeConnections = 0;
 
-class myAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks
+class myAdvertisedDeviceCallbacks : public NimBLEScanCallbacks
 {
   void onResult(NimBLEAdvertisedDevice *advertisedDevice)
   {
@@ -53,7 +53,7 @@ void BLEApi::init()
     NimBLEDevice::init("ESP32BLEGW");
     bleScan = NimBLEDevice::getScan();
     _advertisedDeviceCallback = new myAdvertisedDeviceCallbacks();
-    bleScan->setAdvertisedDeviceCallbacks(_advertisedDeviceCallback, true);
+    bleScan->setScanCallbacks(_advertisedDeviceCallback, true);
     bleScan->setInterval(1250); // 1349
     bleScan->setWindow(650);    // 449
     _clientCallback = new myClientCallbacks();
@@ -218,7 +218,8 @@ std::vector<NimBLERemoteService *> *BLEApi::discoverServices(BLEPeripheralID id)
     {
       return nullptr;
     }
-    return peripheral->getServices(true);
+    const std::vector<NimBLERemoteService *>& services = peripheral->getServices(true);
+    return const_cast<std::vector<NimBLERemoteService *> *>(&services);
   }
   return nullptr;
 }
@@ -235,7 +236,8 @@ std::vector<NimBLERemoteCharacteristic *> *BLEApi::discoverCharacteristics(BLEPe
     NimBLERemoteService *remoteService = peripheral->getService(BLEUUID(service));
     if (remoteService != nullptr)
     {
-      return remoteService->getCharacteristics(true);
+      const std::vector<NimBLERemoteCharacteristic *>& characteristics = remoteService->getCharacteristics(true);
+      return const_cast<std::vector<NimBLERemoteCharacteristic *> *>(&characteristics);
       // std::map<std::string, BLERemoteCharacteristic *> *characteristics;
       // characteristics = remoteService->getCharacteristics();
       // return characteristics;
@@ -374,13 +376,13 @@ void BLEApi::_onCharacteristicNotification(NimBLERemoteCharacteristic *character
   if (_cbOnCharacteristicNotification != nullptr)
   {
     // patch required, see https://github.com/espressif/arduino-esp32/issues/3367
-    NimBLERemoteService *service = characteristic->getRemoteService();
+    auto service = characteristic->getRemoteService();
     NimBLEClient *client = service->getClient();
     std::string dataStr = std::string((char *)data, length);
     _cbOnCharacteristicNotification(
         idFromAddress(client->getPeerAddress()),
-        service->getUUID().to128().toString(),
-        characteristic->getUUID().to128().toString(),
+        service->getUUID().toString(),
+        characteristic->getUUID().toString(),
         dataStr,
         isNotify);
   }
@@ -437,7 +439,7 @@ void BLEApi::delConnection(BLEPeripheralID id)
 BLEPeripheralID BLEApi::idFromAddress(NimBLEAddress address)
 {
   BLEPeripheralID peripheralUuid;
-  memcpy(peripheralUuid.data(), address.getNative(), ESP_BD_ADDR_LEN);
+  memcpy(peripheralUuid.data(), address.getVal(), ESP_BD_ADDR_LEN);
   return peripheralUuid;
 }
 

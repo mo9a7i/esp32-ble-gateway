@@ -14,6 +14,7 @@
 #include <NimBLEDevice.h>
 #include <esp_bt_defs.h>
 #include <functional>
+#include <map>
 #include "util.h"
 
 class myAdvertisedDeviceCallbacks;
@@ -57,7 +58,7 @@ private:
   friend class myClientCallbacks;
   static bool _isReady;
   static bool _isScanning;
-  static NimBLEAdvertisedDeviceCallbacks *_advertisedDeviceCallback;
+  static NimBLEScanCallbacks *_advertisedDeviceCallback;
   static NimBLEClientCallbacks *_clientCallback;
   static NimBLEScan *bleScan;
   static std::map<BLEPeripheralID, uint8_t> addressTypes;

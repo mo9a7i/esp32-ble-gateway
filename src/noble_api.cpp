@@ -525,7 +525,7 @@ void NobleApi::sendServices(const uint8_t client, BLEPeripheralID id, std::vecto
   JsonArray serviceUuids = command.createNestedArray("serviceUuids");
   for (NimBLERemoteService *service : *services)
   {
-    serviceUuids.add(service->getUUID().to128().toString());
+    serviceUuids.add(service->getUUID().toString());
   }
   sendJsonMessage(command, client);
 }
@@ -540,7 +540,7 @@ void NobleApi::sendCharacteristics(const uint8_t client, BLEPeripheralID id, std
   for (NimBLERemoteCharacteristic *characteristic : *characteristics)
   {
     JsonObject charact = characteristicsUuids.createNestedObject();
-    charact["uuid"] = characteristic->getUUID().to128().toString();
+    charact["uuid"] = characteristic->getUUID().toString();
     JsonArray properties = charact.createNestedArray("properties");
     if (characteristic->canRead())
     {

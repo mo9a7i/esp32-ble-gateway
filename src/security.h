@@ -1,7 +1,7 @@
 #ifndef ESP_GW_SECURITY_H
 #define ESP_GW_SECURITY_H
 
-#include <hwcrypto/aes.h>
+#include <mbedtls/aes.h>
 
 #define BLOCK_SIZE 16
 
@@ -23,7 +23,7 @@ class Security {
   private:
     uint8_t key[BLOCK_SIZE];
     size_t keyLength;
-    esp_aes_context aesContext;
+    mbedtls_aes_context aesContext;
 };
 
 #endif
